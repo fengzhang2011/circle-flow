@@ -264,6 +264,55 @@ void drawNodeArc(HPDF_Page page, float x, float y, float radius, float start, fl
     HPDF_Page_Stroke (page);
 }
 
+int bytesPerCharacter(const char* text)
+{
+  int firstByte = (int) *text & 0xFF;
+
+  if( (firstByte & 0xF8) == 0xF0) return 4;
+  else if( (firstByte & 0xF0) == 0xE0 ) return 3;
+  else if( (firstByte & 0xE0) == 0xC0 ) return 2;
+  else if( (firstByte & 0x80) == 0 ) return 1;
+
+  return 0;
+}
+
+void drawText(HPDF_Page page, float x, float y, const char* text)
+{
+  int nbBytesPerChar = bytesPerCharacter(text);
+
+  char test[5] = {'\0'};
+  for(int i=0; i<strlen(text);)
+  {
+    int j = 0;
+    for(j=0; j<nbBytesPerChar; j++) test[j] = text[i+j];
+    printf("%s\n", test);
+    i += nbBytesPerChar;
+  }
+}
+
+void drawTable(HPDF_Page page)
+{
+  HPDF_Page_SetLineWidth (page, 1);
+  HPDF_Rect rect;
+  rect.left = 50;
+  rect.top = 420;
+  rect.right = 550;
+  rect.bottom = 70;
+
+  HPDF_Page_Rectangle (page, rect.left, rect.bottom, rect.right - rect.left,
+                rect.top - rect.bottom);
+
+  HPDF_Page_MoveTo(page, 120, 70);
+  HPDF_Page_LineTo(page, 120, 420);
+  HPDF_Page_MoveTo(page, 330, 70);
+  HPDF_Page_LineTo(page, 330, 420);
+
+  HPDF_Page_MoveTo(page, 50, 390);
+  HPDF_Page_LineTo(page, 550, 390);
+
+  HPDF_Page_Stroke (page);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -306,8 +355,8 @@ main (int argc, char **argv)
     /* draw grid to the page */
     print_grid  (pdf, page);
 
-    float x = 300;
-    float y = 300;
+    float x = 200;
+    float y = 600;
     float radius = 120;
 
     int N = 5;
@@ -342,6 +391,10 @@ main (int argc, char **argv)
     //drawNodeArc(page, x, y, radius, 0, 60);
     //drawNodeArc(page, x, y, radius, 90, 120);
     //drawNodeArc(page, x, y, radius, 180, 210);
+
+    drawTable(page);
+
+    drawText(page, 150, 370, "目标");
 
     /* save the document to a file */
     HPDF_SaveToFile (pdf, fname);
