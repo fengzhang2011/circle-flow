@@ -20,6 +20,7 @@
 #include "hpdf.h"
 #include "hpdf_utils.h"
 #include <iconv.h>
+#include <math.h>
 
 jmp_buf env;
 
@@ -160,7 +161,7 @@ print_grid  (HPDF_Doc     pdf,
     HPDF_Page_SetGrayStroke (page, 0);
 }
 
-char *utf_2_gbk(char *in_buf, size_t in_len) {
+char *utf_2_gbk(const char *in_buf, size_t in_len) {
     iconv_t cd = iconv_open("GBK", "UTF-8");
     if (cd == (iconv_t)-1) {
         perror("获取字符转换描述符失败！\n");
@@ -171,7 +172,7 @@ char *utf_2_gbk(char *in_buf, size_t in_len) {
     // 不要将原始的指针传进去，那样会改变原始指针的
     size_t inlen = in_len;
     size_t outlen = sz;
-    char *in = in_buf;
+    char *in = (char*)in_buf;
     char *out = tmp_str;
     if (tmp_str == NULL) {
         iconv_close(cd);
@@ -199,6 +200,67 @@ draw_line2  (HPDF_Page    page,
 {
     HPDF_Page_MoveTo (page, x + 30, y - 25);
     HPDF_Page_LineTo (page, x + 160, y - 25);
+    HPDF_Page_Stroke (page);
+}
+
+// Draw a node at (x, y) with color RGB (r, g, b) labeled by 'label'.
+void drawNode(HPDF_Doc pdf, HPDF_Page page, float x, float y, float r, float g, float b, const char* label)
+{
+    const char* detail_font_name = HPDF_LoadTTFontFromFile (pdf, "/storage/feng/code/circle-flow/fonts/SourceHanSansCN-Light.ttf", HPDF_TRUE);
+//    printf("detail_font_name = %s\n", detail_font_name);
+
+    HPDF_Page_SetGrayStroke (page, 0);
+    HPDF_Page_SetRGBFill (page, 0, 0, 1.0);
+    HPDF_Page_Circle (page, x, y, 30);
+    HPDF_Page_Fill (page);
+
+    HPDF_Font detail_font = HPDF_GetFont (pdf, detail_font_name, "GBK-EUC-H");
+    //HPDF_Font detail_font = HPDF_GetFont (pdf, "SimHei", "GBK-EUC-H");
+
+    HPDF_Page_BeginText (page);
+
+    HPDF_Page_SetRGBFill (page, 1.0, 1.0, 0);
+
+    char* text = utf_2_gbk(label, strlen(label));
+
+    HPDF_Page_SetFontAndSize (page, detail_font, 12);
+    float textWidth = HPDF_Page_TextWidth(page, text);
+
+    /* move the position of the text to top of the page. */
+    HPDF_Page_MoveTextPos(page, x-textWidth/2, y-12/2);
+
+//    HPDF_Page_BeginText (page);
+    HPDF_Page_ShowText (page, text);
+    HPDF_Page_EndText (page);
+
+    /* finish to print text. */
+    // HPDF_Page_EndText (page);
+}
+
+void drawNodeArc(HPDF_Page page, float x, float y, float radius, float start, float end, bool isClockWise = true)
+{
+    HPDF_Page_SetLineWidth (page, 2);
+    HPDF_Page_SetLineJoin (page, HPDF_ROUND_JOIN);
+
+    printf("arc %f ==> %f\n", start, end);
+
+    HPDF_Page_Arc (page, x, y, radius, start, end);
+    HPDF_Point pos = HPDF_Page_GetCurrentPos (page);
+    float x1, y1, x2, y2;
+    if(isClockWise) {
+      x1 = pos.x + 10 * cos((180-end+25)*M_PI/180);
+      y1 = pos.y + 10 * sin((180-end+25)*M_PI/180);
+      x2 = pos.x + 10 * cos((180-end-20)*M_PI/180);
+      y2 = pos.y + 10 * sin((180-end-20)*M_PI/180);
+    } else {
+      x1 = pos.x + 10 * cos((-end+20)*M_PI/180);
+      y1 = pos.y + 10 * sin((-end+20)*M_PI/180);
+      x2 = pos.x + 10 * cos((-end-25)*M_PI/180);
+      y2 = pos.y + 10 * sin((-end-25)*M_PI/180);
+    }
+    HPDF_Page_LineTo (page, x1, y1);
+    HPDF_Page_MoveTo (page, pos.x, pos.y);
+    HPDF_Page_LineTo (page, x2, y2);
     HPDF_Page_Stroke (page);
 }
 
@@ -244,108 +306,42 @@ main (int argc, char **argv)
     /* draw grid to the page */
     print_grid  (pdf, page);
 
-    HPDF_Page_SetGrayStroke (page, 0);
-    HPDF_Page_SetRGBFill (page, 0, 0, 1.0);
-    HPDF_Page_Circle (page, 100, 100, 30);
-    HPDF_Page_Fill (page);
+    float x = 300;
+    float y = 300;
+    float radius = 120;
 
-    HPDF_Font detail_font = HPDF_GetFont (pdf, detail_font_name, "GBK-EUC-H");
-    //HPDF_Font detail_font = HPDF_GetFont (pdf, "SimHei", "GBK-EUC-H");
+    int N = 5;
+    for(int i=0; i<N; i++)
+    {
+      float angle = (90 - i*360/N)*M_PI/180;
+      printf("angle=%f\n", angle*180/M_PI);
+      float nx = radius * cos(angle) + x;
+      float ny = radius * sin(angle) + y;
+      drawNode(pdf, page, nx, ny, 1.0, 0, 0, "研发部");
 
-    HPDF_Page_BeginText (page);
+      // angle step
+      float step = 360/N*M_PI/180;
+      float marginFactor = 1.3;
+      float margin = marginFactor * 60 * 2 * M_PI / (radius * 2 * M_PI);
+      float arcStart = angle - margin/2;
+      float arcEnd = angle - step + margin/2;
+      printf("angle=%f step=%f margin=%f radius=%f marginFactor=%f\n", angle*180/M_PI, 360.0/N, margin*180/M_PI, radius, marginFactor);
+      //float arcStartX = radius * cos(arcStart) + x;
+      //float arcStartY = radius * sin(arcStart) + y;
+      //float arcEndX = radius * cos(arcEnd) + x;
+      //float arcEndY = radius * sin(arcEnd) + y;
+      printf("arc from %f to %f\n", arcStart*180/M_PI, arcEnd*180/M_PI);
 
-    HPDF_Page_SetRGBFill (page, 1.0, 1.0, 0);
-//    HPDF_Page_ShowText (page, detail_font_name);
-//    HPDF_Page_ShowText (page, " (");
-//    HPDF_Page_ShowText (page, HPDF_Font_GetEncodingName (detail_font));
-//    HPDF_Page_ShowText (page, "中国)");
+      drawNodeArc(page, x, y, 1.1*radius, 90-1.0*arcStart*180/M_PI, 90-1.0*arcEnd*180/M_PI);
+      drawNodeArc(page, x, y, 0.9*radius, 90-1.0*arcEnd*180/M_PI, 90-1.0*arcStart*180/M_PI, false);
+    }
+    drawNode(pdf, page, x, y, 1.0, 0, 0, "客户");
+    //drawNode(pdf, page, 500, 300, 1.0, 0, 0, "产品部");
+    //drawNode(pdf, page, 100, 300, 1.0, 0, 0, "研发部");
 
-//    HPDF_UseCNSFonts(pdf);
-//    HPDF_UseCNSEncodings(pdf);
-//    HPDF_Font font = HPDF_GetFont(pdf, "SimSun", "GB-EUC-H");
-
-    char text[] = "乱七八糟";
-    char* text2 = utf_2_gbk(text, strlen(text));
-
-    HPDF_Page_SetFontAndSize (page, detail_font, 12);
-    float textWidth = HPDF_Page_TextWidth(page, text2);
-    printf("textWidth = %f\n", textWidth);
-
-    /* move the position of the text to top of the page. */
-    HPDF_Page_MoveTextPos(page, 100-textWidth/2, 100-12/2);
-
-//    HPDF_Page_BeginText (page);
-    HPDF_Page_ShowText (page, text2);
-    HPDF_Page_EndText (page);
-
-    /* finish to print text. */
-    // HPDF_Page_EndText (page);
-
-    HPDF_Page_SetLineWidth (page, 2);
-    HPDF_Page_SetLineCap (page, HPDF_PROJECTING_SCUARE_END);
-    draw_line2 (page, 60, 440);
-
-    HPDF_Page_SetLineJoin (page, HPDF_ROUND_JOIN);
-    HPDF_Page_MoveTo (page, 120, 195);
-    HPDF_Page_LineTo (page, 160, 235);
-    HPDF_Page_LineTo (page, 200, 195);
-    HPDF_Page_Stroke (page);
-
-    HPDF_Page_Arc (page, 100, 100, 80, 360 * 0.75, 360);
-    pos = HPDF_Page_GetCurrentPos (page);
-    HPDF_Page_LineTo (page, pos.x-10, pos.y+10);
-    HPDF_Page_MoveTo (page, pos.x, pos.y);
-    HPDF_Page_LineTo (page, pos.x-10, pos.y-10);
-    HPDF_Page_Stroke (page);
-    /* draw pie chart
-     *
-     *   A: 45% Red
-     *   B: 25% Blue
-     *   C: 15% green
-     *   D: other yellow
-     */
-
-    /* A */
-//    HPDF_Page_SetRGBFill (page, 1.0, 0, 0);
-//    HPDF_Page_MoveTo (page, 100, 100);
-//    HPDF_Page_LineTo (page, 100, 180);
-//    HPDF_Page_Arc (page, 100, 100, 80, 0, 360 * 0.45);
-//    pos = HPDF_Page_GetCurrentPos (page);
-//    HPDF_Page_LineTo (page, 100, 100);
-//    HPDF_Page_Fill (page);
-
-    /* B */
-//    HPDF_Page_SetRGBFill (page, 0, 0, 1.0);
-//    HPDF_Page_MoveTo (page, 100, 100);
-//    HPDF_Page_LineTo (page, pos.x, pos.y);
-//    HPDF_Page_Arc (page, 100, 100, 80, 360 * 0.45, 360 * 0.7);
-//    pos = HPDF_Page_GetCurrentPos (page);
-//    HPDF_Page_LineTo (page, 100, 100);
-//    HPDF_Page_Fill (page);
-//
-//    /* C */
-//    HPDF_Page_SetRGBFill (page, 0, 1.0, 0);
-//    HPDF_Page_MoveTo (page, 100, 100);
-//    HPDF_Page_LineTo (page, pos.x, pos.y);
-//    HPDF_Page_Arc (page, 100, 100, 80, 360 * 0.7, 360 * 0.85);
-//    pos = HPDF_Page_GetCurrentPos (page);
-//    HPDF_Page_LineTo (page, 100, 100);
-//    HPDF_Page_Fill (page);
-//
-//    /* D */
-//    HPDF_Page_SetRGBFill (page, 1.0, 1.0, 0);
-//    HPDF_Page_MoveTo (page, 100, 100);
-//    HPDF_Page_LineTo (page, pos.x, pos.y);
-//    HPDF_Page_Arc (page, 100, 100, 80, 360 * 0.85, 360);
-//    pos = HPDF_Page_GetCurrentPos (page);
-//    HPDF_Page_LineTo (page, 100, 100);
-//    HPDF_Page_Fill (page);
-//
-//    /* draw center circle */
-//    HPDF_Page_SetGrayStroke (page, 0);
-//    HPDF_Page_SetGrayFill (page, 1);
-//    HPDF_Page_Circle (page, 100, 100, 30);
-//    HPDF_Page_Fill (page);
+    //drawNodeArc(page, x, y, radius, 0, 60);
+    //drawNodeArc(page, x, y, radius, 90, 120);
+    //drawNodeArc(page, x, y, radius, 180, 210);
 
     /* save the document to a file */
     HPDF_SaveToFile (pdf, fname);
