@@ -58,34 +58,38 @@ void CCFlow::finalize() {
 
 }
 
-void CCFlow::addPage() {
+HPDF_Page CCFlow::addPage(std::string pageId) {
 
-  HPDF_Point pos;
-  const char *detail_font_name;
+  HPDF_Page page = HPDF_AddPage(pdf);
 
-  /* add a new page object. */
-  HPDF_Page page = HPDF_AddPage (pdf);
+  // Change the DPI. (The following statement changes 72dpi to 300 dpi.)
   // HPDF_Page_Concat (page, 72.0f / 300.0f, 0, 0, 72.0f / 300.0f, 0, 0);
 
   // Set the page size: A4 by default.
   HPDF_Page_SetHeight (page, 72*11.69);
   HPDF_Page_SetWidth (page, 72*8.27);
 
-  /* draw grid to the page */
+  // Draw grid to the page.
   hpdfShowGrid(pdf, page);
 
-  float x = 200;
-  float y = 600;
-  float radius = 120;
+  // Insert to pages map.
+  pages.insert(std::pair<std::string, HPDF_Page>(pageId, page));
 
-  int N = 5;
+  return page;
+
+}
+
+void CCFlow::drawCircle(HPDF_Page page, float x, float y, float radius, std::string center, std::vector<std::string> nodes) {
+
+  int N = nodes.size();
+
   for(int i=0; i<N; i++)
   {
     float angle = (90 - i*360/N)*M_PI/180;
     // printf("angle=%f\n", angle*180/M_PI);
     float nx = radius * cos(angle) + x;
     float ny = radius * sin(angle) + y;
-    drawNode(pdf, page, nx, ny, 1.0, 0, 0, "研发部");
+    drawNode(pdf, page, nx, ny, 1.0, 0, 0, nodes[i].c_str());
 
     // angle step
     float step = 360/N*M_PI/180;
@@ -103,7 +107,31 @@ void CCFlow::addPage() {
     drawNodeArc(page, x, y, 1.1*radius, 90-1.0*arcStart*180/M_PI, 90-1.0*arcEnd*180/M_PI);
     drawNodeArc(page, x, y, 0.9*radius, 90-1.0*arcEnd*180/M_PI, 90-1.0*arcStart*180/M_PI, false);
   }
-  drawNode(pdf, page, x, y, 1.0, 0, 0, "客户");
+
+  drawNode(pdf, page, x, y, 1.0, 0, 0, center.c_str());
+
+}
+
+void CCFlow::createFlow() {
+
+  HPDF_Point pos;
+  const char *detail_font_name;
+
+  /* add a new page object. */
+  HPDF_Page page = addPage("index");
+
+  std::vector<std::string> nodes;
+  nodes.push_back("研发部");
+  nodes.push_back("研发部");
+  nodes.push_back("研发部");
+  nodes.push_back("研发部");
+  nodes.push_back("研发部");
+
+  float x = HPDF_Page_GetWidth(page)/2;
+  float y = 600;
+  float radius = 120;
+
+  drawCircle(page, x, y, radius, "客户", nodes);
 
   drawTable(page);
 

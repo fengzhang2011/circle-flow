@@ -18,7 +18,7 @@ int main (int argc, char **argv)
 {
   CCFlow ccflow;
 
-  ccflow.addPage();
+  ccflow.createFlow();
   ccflow.save("circle-flow.pdf");
 
   return 0;
