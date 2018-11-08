@@ -112,31 +112,26 @@ void CCFlow::drawCircle(HPDF_Page page, float x, float y, float radius, std::str
 
 }
 
-void CCFlow::createFlow() {
+void drawSupervisor(HPDF_Page page) {
 
-  HPDF_Point pos;
-  const char *detail_font_name;
+  HPDF_Page_SetLineWidth (page, 1);
+  HPDF_Rect rect;
+  rect.left = 50;
+  rect.top = 440;
+  rect.right = 550;
+  rect.bottom = 410;
 
-  /* add a new page object. */
-  HPDF_Page page = addPage("index");
+  HPDF_Page_Rectangle (page, rect.left, rect.bottom, rect.right - rect.left,
+                rect.top - rect.bottom);
 
-  std::vector<std::string> nodes;
-  nodes.push_back("研发部");
-  nodes.push_back("研发部");
-  nodes.push_back("研发部");
-  nodes.push_back("研发部");
-  nodes.push_back("研发部");
+  HPDF_Page_Stroke (page);
 
-  float x = HPDF_Page_GetWidth(page)/2;
-  float y = 600;
-  float radius = 120;
+  drawText(page, 50, 440, 200, 50, 5, 12, "总负责人： XXX");
+  drawText(page, 370, 440, 200, 50, 5, 12, "日期： 2018年11月09日");
 
-  drawCircle(page, x, y, radius, "客户", nodes);
+}
 
-  drawTable(page);
-
-  drawText(page, 120, 390, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转。");
-  drawText(page, 330, 390, 200, 300, 5, 12, "需要");
+void addLink(HPDF_Page page) {
 
   HPDF_Rect rect;
   rect.left = 150;
@@ -149,6 +144,80 @@ void CCFlow::createFlow() {
   const char* url = "http://www.lm";
   HPDF_Page_CreateURILinkAnnot (page, rect, url);
 
+}
+
+void addResponsibilities(HPDF_Page page) {
+
+  drawTable(page);
+
+  // header
+  drawText(page, 50, 410, 70, 300, 5, 12, "责任人");
+  drawText(page, 120, 410, 200, 300, 5, 12, "输入");
+  drawText(page, 330, 410, 200, 300, 5, 12, "输出");
+
+  // first role
+  drawText(page, 50, 380, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 360, 70, 300, 5, 12, "张三");
+  drawText(page, 120, 380, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 330, 380, 200, 300, 5, 12, "需要");
+
+  // second role
+  drawText(page, 50, 310, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 290, 70, 300, 5, 12, "李四");
+  drawText(page, 120, 310, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 330, 310, 200, 300, 5, 12, "需要");
+
+  // third role
+  drawText(page, 50, 240, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 220, 70, 300, 5, 12, "李四");
+  drawText(page, 120, 240, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 330, 240, 200, 300, 5, 12, "需要");
+
+  // forth role
+  drawText(page, 50, 170, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 150, 70, 300, 5, 12, "李四");
+  drawText(page, 120, 170, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 330, 170, 200, 300, 5, 12, "需要");
+
+  // fifth role
+  drawText(page, 50, 100, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 80, 70, 300, 5, 12, "李四");
+  drawText(page, 120, 100, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 330, 100, 200, 300, 5, 12, "需要");
+
+}
+
+void CCFlow::createFlow() {
+
+  HPDF_Point pos;
+  const char *detail_font_name;
+
+  // Add a new page object.
+  HPDF_Page page = addPage("index");
+
+  std::vector<std::string> nodes;
+  nodes.push_back("研发部");
+  nodes.push_back("研发部");
+  nodes.push_back("研发部");
+  nodes.push_back("研发部");
+  nodes.push_back("研发部");
+
+  float x = HPDF_Page_GetWidth(page)/2;
+  float y = 610;
+  float radius = 120;
+
+  drawCircle(page, x, y, radius, "客户", nodes);
+
+  addResponsibilities(page);
+
+  // Draw the title
+  drawText(page, 250, 800, 500, 300, 5, 12, "这里放标题。");
+
+  // Add the supervisor.
+  drawSupervisor(page);
+  
+  // Add the link.
+  //addLink(page);
 }
 
 void CCFlow::save(const char* fileName) {

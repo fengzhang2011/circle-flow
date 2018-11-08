@@ -251,20 +251,20 @@ void drawTable(HPDF_Page page)
   HPDF_Page_SetLineWidth (page, 1);
   HPDF_Rect rect;
   rect.left = 50;
-  rect.top = 420;
+  rect.top = 410;
   rect.right = 550;
-  rect.bottom = 70;
+  rect.bottom = 40;
 
   HPDF_Page_Rectangle (page, rect.left, rect.bottom, rect.right - rect.left,
                 rect.top - rect.bottom);
 
-  HPDF_Page_MoveTo(page, 120, 70);
-  HPDF_Page_LineTo(page, 120, 420);
-  HPDF_Page_MoveTo(page, 330, 70);
-  HPDF_Page_LineTo(page, 330, 420);
+  HPDF_Page_MoveTo(page, 120, 40);
+  HPDF_Page_LineTo(page, 120, 410);
+  HPDF_Page_MoveTo(page, 330, 40);
+  HPDF_Page_LineTo(page, 330, 410);
 
-  HPDF_Page_MoveTo(page, 50, 390);
-  HPDF_Page_LineTo(page, 550, 390);
+  HPDF_Page_MoveTo(page, 50, 380);
+  HPDF_Page_LineTo(page, 550, 380);
 
   HPDF_Page_Stroke (page);
 }
