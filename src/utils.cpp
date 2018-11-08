@@ -144,17 +144,10 @@ char *utf2GBK(const char *in_buf)
 // Draw a node at (x, y) with color RGB (r, g, b) labeled by 'label'.
 void drawNode(HPDF_Doc pdf, HPDF_Page page, float x, float y, float r, float g, float b, const char* label)
 {
-  const char* detail_font_name = HPDF_LoadTTFontFromFile (pdf, "/storage/feng/code/circle-flow/fonts/SourceHanSansCN-Light.ttf", HPDF_TRUE);
-//  printf("detail_font_name = %s\n", detail_font_name);
-
   HPDF_Page_SetGrayStroke (page, 0);
   HPDF_Page_SetRGBFill (page, 0, 0, 1.0);
   HPDF_Page_Circle (page, x, y, 30);
   HPDF_Page_Fill (page);
-
-  HPDF_Font detail_font = HPDF_GetFont (pdf, detail_font_name, "GBK-EUC-H");
-  //HPDF_Font detail_font = HPDF_GetFont (pdf, "SimHei", "GBK-EUC-H");
-  HPDF_Page_SetFontAndSize (page, detail_font, 12);
 
   HPDF_Page_BeginText (page);
 
@@ -243,29 +236,5 @@ void drawText(HPDF_Page page, float x, float y, float width, float height, float
   }
   HPDF_Page_EndText(page);
   return;
-}
-
-// Draw table.
-void drawTable(HPDF_Page page)
-{
-  HPDF_Page_SetLineWidth (page, 1);
-  HPDF_Rect rect;
-  rect.left = 50;
-  rect.top = 410;
-  rect.right = 550;
-  rect.bottom = 40;
-
-  HPDF_Page_Rectangle (page, rect.left, rect.bottom, rect.right - rect.left,
-                rect.top - rect.bottom);
-
-  HPDF_Page_MoveTo(page, 120, 40);
-  HPDF_Page_LineTo(page, 120, 410);
-  HPDF_Page_MoveTo(page, 330, 40);
-  HPDF_Page_LineTo(page, 330, 410);
-
-  HPDF_Page_MoveTo(page, 50, 380);
-  HPDF_Page_LineTo(page, 550, 380);
-
-  HPDF_Page_Stroke (page);
 }
 

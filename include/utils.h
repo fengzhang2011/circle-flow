@@ -45,7 +45,4 @@ int bytesPerCharacter(const char* text);
 // Draw text.
 void drawText(HPDF_Page page, float x, float y, float width, float height, float margin, float fontSize, const char* text);
 
-// Draw table.
-void drawTable(HPDF_Page page);
-
 #endif // #ifndef _UTILS_INCLUDE_H_

@@ -50,6 +50,10 @@ void CCFlow::initialize() {
   HPDF_UseCNSFonts(pdf);
   HPDF_SetCompressionMode(pdf, HPDF_COMP_ALL);
 
+  // const char* font_name = HPDF_LoadTTFontFromFile(pdf, "../fonts/SourceHanSansCN-Light.ttf", HPDF_TRUE);
+  // font = HPDF_GetFont(pdf, font_name, "GBK-EUC-H");
+  font = HPDF_GetFont(pdf, "SimHei", "GBK-EUC-H");
+
 }
 
 void CCFlow::finalize() {
@@ -71,6 +75,9 @@ HPDF_Page CCFlow::addPage(std::string pageId) {
 
   // Draw grid to the page.
   hpdfShowGrid(pdf, page);
+
+  // Set font and size.
+  HPDF_Page_SetFontAndSize(page, font, 12);
 
   // Insert to pages map.
   pages.insert(std::pair<std::string, HPDF_Page>(pageId, page));
@@ -112,23 +119,31 @@ void CCFlow::drawCircle(HPDF_Page page, float x, float y, float radius, std::str
 
 }
 
-void drawSupervisor(HPDF_Page page) {
-
-  HPDF_Page_SetLineWidth (page, 1);
+// Draw table.
+void drawTable(HPDF_Page page, float left, float top, float bottom, float right)
+{
+  HPDF_Page_SetLineWidth(page, 1);
   HPDF_Rect rect;
-  rect.left = 50;
-  rect.top = 440;
-  rect.right = 550;
-  rect.bottom = 410;
+  rect.left = left;
+  rect.top = top;
+  rect.bottom = bottom;
+  rect.right = right;
 
-  HPDF_Page_Rectangle (page, rect.left, rect.bottom, rect.right - rect.left,
+  HPDF_Page_Rectangle(page, rect.left, rect.bottom, rect.right - rect.left,
                 rect.top - rect.bottom);
 
-  HPDF_Page_Stroke (page);
+  HPDF_Page_MoveTo(page, left, top-25);
+  HPDF_Page_LineTo(page, right, top-25);
 
-  drawText(page, 50, 440, 200, 50, 5, 12, "总负责人： XXX");
-  drawText(page, 370, 440, 200, 50, 5, 12, "日期： 2018年11月09日");
+  HPDF_Page_MoveTo(page, left+60, bottom);
+  HPDF_Page_LineTo(page, left+60, top-25);
+  HPDF_Page_MoveTo(page, left+285, bottom);
+  HPDF_Page_LineTo(page, left+285, top-25);
 
+  HPDF_Page_MoveTo(page, left, top-50);
+  HPDF_Page_LineTo(page, right, top-50);
+
+  HPDF_Page_Stroke(page);
 }
 
 void addLink(HPDF_Page page) {
@@ -148,42 +163,54 @@ void addLink(HPDF_Page page) {
 
 void addResponsibilities(HPDF_Page page) {
 
-  drawTable(page);
+  drawTable(page, 50, 440, 40, 550);
 
+  // Add the supervisor.
+  const char* supervisor = "总负责人： XXX";
+  const char* date = "日期： 2018年11月09日";
+  drawText(page, 50, 440, 200, 50, 5, 12, supervisor);
+  drawText(page, 415, 440, 200, 50, 5, 12, date);
+  
   // header
-  drawText(page, 50, 410, 70, 300, 5, 12, "责任人");
-  drawText(page, 120, 410, 200, 300, 5, 12, "输入");
-  drawText(page, 330, 410, 200, 300, 5, 12, "输出");
+  drawText(page, 50, 415, 70, 300, 5, 12, "责任人");
+  drawText(page, 110, 415, 200, 300, 5, 12, "输入");
+  drawText(page, 335, 415, 200, 300, 5, 12, "输出");
 
   // first role
-  drawText(page, 50, 380, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 360, 70, 300, 5, 12, "张三");
-  drawText(page, 120, 380, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 330, 380, 200, 300, 5, 12, "需要");
+  drawText(page, 50, 390, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 370, 70, 300, 5, 12, "张三");
+  drawText(page, 110, 390, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 335, 390, 200, 300, 5, 12, "需要");
 
   // second role
-  drawText(page, 50, 310, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 290, 70, 300, 5, 12, "李四");
-  drawText(page, 120, 310, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 330, 310, 200, 300, 5, 12, "需要");
+  drawText(page, 50, 335, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 315, 70, 300, 5, 12, "李四");
+  drawText(page, 110, 335, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 335, 335, 200, 300, 5, 12, "需要");
 
   // third role
-  drawText(page, 50, 240, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 220, 70, 300, 5, 12, "李四");
-  drawText(page, 120, 240, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 330, 240, 200, 300, 5, 12, "需要");
+  drawText(page, 50, 280, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 260, 70, 300, 5, 12, "李四");
+  drawText(page, 110, 280, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 335, 280, 200, 300, 5, 12, "需要");
 
   // forth role
-  drawText(page, 50, 170, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 150, 70, 300, 5, 12, "李四");
-  drawText(page, 120, 170, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 330, 170, 200, 300, 5, 12, "需要");
+  drawText(page, 50, 225, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 205, 70, 300, 5, 12, "李四");
+  drawText(page, 110, 225, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 335, 225, 200, 300, 5, 12, "需要");
 
   // fifth role
-  drawText(page, 50, 100, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 80, 70, 300, 5, 12, "李四");
-  drawText(page, 120, 100, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 330, 100, 200, 300, 5, 12, "需要");
+  drawText(page, 50, 170, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 150, 70, 300, 5, 12, "李四");
+  drawText(page, 110, 170, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 335, 170, 200, 300, 5, 12, "需要");
+
+  // sixth role
+  drawText(page, 50, 115, 70, 300, 5, 12, "研发部");
+  drawText(page, 50, 95, 70, 300, 5, 12, "李四");
+  drawText(page, 110, 115, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
+  drawText(page, 335, 115, 200, 300, 5, 12, "需要");
 
 }
 
@@ -213,9 +240,6 @@ void CCFlow::createFlow() {
   // Draw the title
   drawText(page, 250, 800, 500, 300, 5, 12, "这里放标题。");
 
-  // Add the supervisor.
-  drawSupervisor(page);
-  
   // Add the link.
   //addLink(page);
 }

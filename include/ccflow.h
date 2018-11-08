@@ -40,6 +40,8 @@ private:
 
 private:
   HPDF_Doc pdf;
+  HPDF_Font font;
+
   std::map<std::string, HPDF_Page> pages;
 
 };
