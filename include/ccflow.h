@@ -19,6 +19,28 @@
 
 #include "libharu/hpdf.h"
 
+
+typedef struct {
+
+  std::string group;
+  std::string name;
+  std::string input;
+  std::string output;
+
+} node_desc_t;
+
+typedef struct {
+
+  std::string owner;
+  std::string target;
+  int date; // epoch time.
+  node_desc_t* nodes;
+  int size;
+
+} flow_desc_t;
+
+
+// CCFlow class
 class CCFlow {
 
 public:
@@ -27,7 +49,7 @@ public:
 
 public:
   HPDF_Page addPage(std::string pageId);
-  void createFlow();
+  void createFlow(const flow_desc_t &flow_desc);
   void save(const char* fileName);
 
 private:
@@ -35,7 +57,7 @@ private:
   void finalize();
 
   // Draw a circle flow.
-  void drawCircle(HPDF_Page page, float x, float y, float radius, std::string center, std::vector<std::string> nodes);
+  void drawCircle(HPDF_Page page, float x, float y, float radius, const flow_desc_t &flow_desc);
 
 
 private:

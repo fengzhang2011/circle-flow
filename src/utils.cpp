@@ -144,23 +144,25 @@ char *utf2GBK(const char *in_buf)
 // Draw a node at (x, y) with color RGB (r, g, b) labeled by 'label'.
 void drawNode(HPDF_Doc pdf, HPDF_Page page, float x, float y, float r, float g, float b, const char* label)
 {
-  HPDF_Page_SetGrayStroke (page, 0);
-  HPDF_Page_SetRGBFill (page, 0, 0, 1.0);
-  HPDF_Page_Circle (page, x, y, 30);
-  HPDF_Page_Fill (page);
+  HPDF_Page_SetGrayStroke(page, 0);
+  HPDF_Page_SetRGBFill(page, r, g, b);
+  HPDF_Page_Circle(page, x, y, 30);
+  HPDF_Page_Fill(page);
 
-  HPDF_Page_BeginText (page);
+  HPDF_Page_BeginText(page);
 
-  HPDF_Page_SetRGBFill (page, 1.0, 0, 0);
+  HPDF_Page_SetRGBFill(page, color_white.r, color_white.g, color_white.b);
   char* text = utf2GBK(label);
   float textWidth = HPDF_Page_TextWidth(page, text);
 
   /* move the position of the text to top of the page. */
   HPDF_Page_MoveTextPos(page, x-textWidth/2, y-12/2);
 
-//  HPDF_Page_BeginText (page);
-  HPDF_Page_ShowText (page, text);
-  HPDF_Page_EndText (page);
+//  HPDF_Page_BeginText(page);
+  HPDF_Page_ShowText(page, text);
+  HPDF_Page_EndText(page);
+
+  HPDF_Page_SetRGBFill(page, color_black.r, color_black.g, color_black.b);
 
   free(text);
   text = NULL;

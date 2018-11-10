@@ -86,17 +86,24 @@ HPDF_Page CCFlow::addPage(std::string pageId) {
 
 }
 
-void CCFlow::drawCircle(HPDF_Page page, float x, float y, float radius, std::string center, std::vector<std::string> nodes) {
+void CCFlow::drawCircle(HPDF_Page page, float x, float y, float radius, const flow_desc_t &flow_desc) {
 
-  int N = nodes.size();
+  int N = flow_desc.size;
+
+  color_t colors[] = { color_cfn_1, color_cfn_2, color_cfn_3, color_cfn_4, color_cfn_5, color_cfn_6, color_cfn_7, color_cfn_8 };
 
   for(int i=0; i<N; i++)
   {
+    std::string text = flow_desc.nodes[i].group;
+    if( text.empty() ) {
+      text = flow_desc.nodes[i].name;
+    }
+
     float angle = (90 - i*360/N)*M_PI/180;
     // printf("angle=%f\n", angle*180/M_PI);
     float nx = radius * cos(angle) + x;
     float ny = radius * sin(angle) + y;
-    drawNode(pdf, page, nx, ny, 1.0, 0, 0, nodes[i].c_str());
+    drawNode(pdf, page, nx, ny, colors[i].r, colors[i].g, colors[i].b, text.c_str());
 
     // angle step
     float step = 360/N*M_PI/180;
@@ -111,16 +118,17 @@ void CCFlow::drawCircle(HPDF_Page page, float x, float y, float radius, std::str
     //float arcEndY = radius * sin(arcEnd) + y;
     // printf("arc from %f to %f\n", arcStart*180/M_PI, arcEnd*180/M_PI);
 
-    drawNodeArc(page, x, y, 1.1*radius, 90-1.0*arcStart*180/M_PI, 90-1.0*arcEnd*180/M_PI);
-    drawNodeArc(page, x, y, 0.9*radius, 90-1.0*arcEnd*180/M_PI, 90-1.0*arcStart*180/M_PI, false);
+    drawNodeArc(page, x, y, radius, 90-1.0*arcStart*180/M_PI, 90-1.0*arcEnd*180/M_PI);
+    // drawNodeArc(page, x, y, 1.1*radius, 90-1.0*arcStart*180/M_PI, 90-1.0*arcEnd*180/M_PI);
+    // drawNodeArc(page, x, y, 0.9*radius, 90-1.0*arcEnd*180/M_PI, 90-1.0*arcStart*180/M_PI, false);
   }
 
-  drawNode(pdf, page, x, y, 1.0, 0, 0, center.c_str());
+  drawNode(pdf, page, x, y, color_cfn_center.r, color_cfn_center.g, color_cfn_center.b, flow_desc.target.c_str());
 
 }
 
 // Draw table.
-void drawTable(HPDF_Page page, float left, float top, float bottom, float right)
+void drawTable(HPDF_Page page, float left, float top, float bottom, float right, int rows)
 {
   HPDF_Page_SetLineWidth(page, 1);
   HPDF_Rect rect;
@@ -143,6 +151,15 @@ void drawTable(HPDF_Page page, float left, float top, float bottom, float right)
   HPDF_Page_MoveTo(page, left, top-50);
   HPDF_Page_LineTo(page, right, top-50);
 
+  // draw rows
+  if(rows>1) {
+    float v_space = 1.0 * (top-50-bottom) / rows;
+    for(int i=0; i<rows; i++) {
+      HPDF_Page_MoveTo(page, left, bottom+v_space*(i+1));
+      HPDF_Page_LineTo(page, right, bottom+v_space*(i+1));
+    }
+  }
+
   HPDF_Page_Stroke(page);
 }
 
@@ -161,60 +178,43 @@ void addLink(HPDF_Page page) {
 
 }
 
-void addResponsibilities(HPDF_Page page) {
+void addResponsibilities(HPDF_Page page, float left, float top, float bottom, float right, float margin, float fontSize, const flow_desc_t &flow_desc) {
 
-  drawTable(page, 50, 440, 40, 550);
+  int rows = flow_desc.size;
+
+  drawTable(page, left, top, bottom, right, rows);
 
   // Add the supervisor.
-  const char* supervisor = "总负责人： XXX";
-  const char* date = "日期： 2018年11月09日";
-  drawText(page, 50, 440, 200, 50, 5, 12, supervisor);
-  drawText(page, 415, 440, 200, 50, 5, 12, date);
-  
+  std::string supervisor = "总负责人： "+flow_desc.owner;
+  std::string date = "日期： 2018年11月09日";
+  drawText(page, left, top, 200, 50, margin, fontSize, supervisor.c_str());
+  drawText(page, right-135, top, 200, 50, margin, fontSize, date.c_str());
+
   // header
-  drawText(page, 50, 415, 70, 300, 5, 12, "责任人");
-  drawText(page, 110, 415, 200, 300, 5, 12, "输入");
-  drawText(page, 335, 415, 200, 300, 5, 12, "输出");
+  drawText(page, left, top-25, 70, 300, margin, fontSize, "责任人");
+  drawText(page, left+60, top-25, 200, 300, margin, fontSize, "输入");
+  drawText(page, left+285, top-25, 200, 300, margin, fontSize, "输出");
 
-  // first role
-  drawText(page, 50, 390, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 370, 70, 300, 5, 12, "张三");
-  drawText(page, 110, 390, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 335, 390, 200, 300, 5, 12, "需要");
-
-  // second role
-  drawText(page, 50, 335, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 315, 70, 300, 5, 12, "李四");
-  drawText(page, 110, 335, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 335, 335, 200, 300, 5, 12, "需要");
-
-  // third role
-  drawText(page, 50, 280, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 260, 70, 300, 5, 12, "李四");
-  drawText(page, 110, 280, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 335, 280, 200, 300, 5, 12, "需要");
-
-  // forth role
-  drawText(page, 50, 225, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 205, 70, 300, 5, 12, "李四");
-  drawText(page, 110, 225, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 335, 225, 200, 300, 5, 12, "需要");
-
-  // fifth role
-  drawText(page, 50, 170, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 150, 70, 300, 5, 12, "李四");
-  drawText(page, 110, 170, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 335, 170, 200, 300, 5, 12, "需要");
-
-  // sixth role
-  drawText(page, 50, 115, 70, 300, 5, 12, "研发部");
-  drawText(page, 50, 95, 70, 300, 5, 12, "李四");
-  drawText(page, 110, 115, 200, 300, 5, 12, "需要对目标进行拆解，明确每个目标的具体负责人。还需要协调每个组之间的接口，确保整个过程的正常运转");
-  drawText(page, 335, 115, 200, 300, 5, 12, "需要");
+  // draw rows
+  if(rows>1) {
+    float v_space = 1.0 * (top-50-bottom) / rows;
+    for(int i=rows-1; i>=0; i--) {
+      float row_top = bottom+v_space*(i+1);
+      node_desc_t node = flow_desc.nodes[rows-1-i];
+      if(node.group.empty()) {
+        drawText(page, left, row_top, 70, v_space, margin, fontSize, node.name.c_str());
+      } else {
+        drawText(page, left, row_top, 70, v_space, margin, fontSize, node.group.c_str());
+        drawText(page, left, row_top-20, 70, v_space, margin, fontSize, node.name.c_str());
+      }
+      drawText(page, left+60, row_top, 200, v_space, margin, fontSize, node.input.c_str());
+      drawText(page, left+285, row_top, 200, v_space, margin, fontSize, node.output.c_str());
+    }
+  }
 
 }
 
-void CCFlow::createFlow() {
+void CCFlow::createFlow(const flow_desc_t &flow_desc) {
 
   HPDF_Point pos;
   const char *detail_font_name;
@@ -222,23 +222,26 @@ void CCFlow::createFlow() {
   // Add a new page object.
   HPDF_Page page = addPage("index");
 
-  std::vector<std::string> nodes;
-  nodes.push_back("研发部");
-  nodes.push_back("研发部");
-  nodes.push_back("研发部");
-  nodes.push_back("研发部");
-  nodes.push_back("研发部");
-
   float x = HPDF_Page_GetWidth(page)/2;
   float y = 610;
   float radius = 120;
 
-  drawCircle(page, x, y, radius, "客户", nodes);
+  drawCircle(page, x, y, radius, flow_desc);
 
-  addResponsibilities(page);
+  float left = 50;
+  float top = 440;
+  float bottom = 40;
+  float right = 550;
+
+  float margin = 5;
+  float fontSize = 12;
+
+  addResponsibilities(page, left, top, bottom, right, margin, fontSize, flow_desc);
 
   // Draw the title
-  drawText(page, 250, 800, 500, 300, 5, 12, "这里放标题。");
+  HPDF_Page_SetFontAndSize(page, font, 16);
+  drawText(page, 250, 810, 500, 300, 5, 16, "这里放标题。");
+  HPDF_Page_SetFontAndSize(page, font, 12);
 
   // Add the link.
   //addLink(page);
