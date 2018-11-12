@@ -12,7 +12,7 @@ set ( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-O3" )
 include_directories ( ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
 # Include the extra libraries.
-set ( EXTRA_LIBS libhpdfs.a z)
+set ( EXTRA_LIBS hpdfs z yaml-cpp)
 link_directories( ${CMAKE_CURRENT_SOURCE_DIR}/lib )
 
 # Add source code.

@@ -13,6 +13,7 @@
 
 #include "ccflow.h"
 
+#include <stdio.h>
 
 int main (int argc, char **argv)
 {
@@ -34,6 +35,14 @@ int main (int argc, char **argv)
   CCFlow ccflow;
   ccflow.createFlow(flow_desc);
   ccflow.save("circle-flow.pdf");
+
+//  YAML::Node node = YAML::Load("start: [1, 3, 0]");
+//  Vec3 v = node["start"].as<Vec3>();
+//  node["end"] = Vec3(2, -1, 0);
+  YAML::Node node;
+  node["a"] = flow_desc;
+  printf("%s\n", Dump(node).c_str());
+  
 
   delete []nodes;
   flow_desc.nodes = NULL;

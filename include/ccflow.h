@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "libharu/hpdf.h"
+#include "yaml-cpp/yaml.h"
 
 
 typedef struct {
@@ -39,6 +40,29 @@ typedef struct {
 
 } flow_desc_t;
 
+namespace YAML{
+template<>
+struct convert<flow_desc_t> {
+  static Node encode(const flow_desc_t& flow_desc) {
+    Node node;
+    node.push_back(flow_desc.owner);
+    node.push_back(flow_desc.target);
+    node.push_back(flow_desc.date);
+    return node;
+  }
+
+  static bool decode(const Node& node, flow_desc_t& flow_desc) {
+    if(!node.IsSequence() || node.size() != 3) {
+      return false;
+    }
+
+    flow_desc.owner = node[0].as<double>();
+    flow_desc.target = node[1].as<double>();
+    flow_desc.date = node[2].as<double>();
+    return true;
+  }
+};
+}
 
 // CCFlow class
 class CCFlow {
