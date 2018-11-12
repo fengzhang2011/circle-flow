@@ -88,7 +88,7 @@ HPDF_Page CCFlow::addPage(std::string pageId) {
 
 void CCFlow::drawCircle(HPDF_Page page, float x, float y, float radius, const flow_desc_t &flow_desc) {
 
-  int N = flow_desc.size;
+  int N = flow_desc.nodes.size();
 
   color_t colors[] = { color_cfn_1, color_cfn_2, color_cfn_3, color_cfn_4, color_cfn_5, color_cfn_6, color_cfn_7, color_cfn_8 };
 
@@ -180,13 +180,13 @@ void addLink(HPDF_Page page) {
 
 void addResponsibilities(HPDF_Page page, float left, float top, float bottom, float right, float margin, float fontSize, const flow_desc_t &flow_desc) {
 
-  int rows = flow_desc.size;
+  int rows = flow_desc.nodes.size();
 
   drawTable(page, left, top, bottom, right, rows);
 
   // Add the supervisor.
-  std::string supervisor = "总负责人： "+flow_desc.owner;
-  std::string date = "日期： 2018年11月09日";
+  std::string supervisor = "总负责人： " + flow_desc.owner;
+  std::string date = "日期： " + flow_desc.date;
   drawText(page, left, top, 200, 50, margin, fontSize, supervisor.c_str());
   drawText(page, right-135, top, 200, 50, margin, fontSize, date.c_str());
 
@@ -240,7 +240,8 @@ void CCFlow::createFlow(const flow_desc_t &flow_desc) {
 
   // Draw the title
   HPDF_Page_SetFontAndSize(page, font, 16);
-  drawText(page, 250, 810, 500, 300, 5, 16, "这里放标题。");
+  float offset = HPDF_Page_GetWidth(page) - HPDF_Page_TextWidth(page, utf2GBK(flow_desc.title.c_str()));
+  drawText(page, offset/2, 810, 500, 300, 5, 16, flow_desc.title.c_str());
   HPDF_Page_SetFontAndSize(page, font, 12);
 
   // Add the link.

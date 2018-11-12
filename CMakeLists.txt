@@ -6,7 +6,7 @@ set ( APP_NAME "circle-flow" )
 project ( ${APP_NAME} )
 
 # Set the compiler flags.
-set ( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-O3" )
+set ( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-O3 -std=c++11" )
 
 # Set the INCLUDE path.
 include_directories ( ${CMAKE_CURRENT_SOURCE_DIR}/include )
